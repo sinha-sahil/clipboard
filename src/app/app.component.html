@@ -8,11 +8,26 @@
 <div class="parent">
   <div style="margin-bottom: 20px">
     <button class="ui blue button" (click)="copy()">Copy</button>
+    <button class="ui yellow button" (click)="update()">Update</button>
   </div>
 
+  <div
+    class="ui raised segment container"
+    style="height: 200px"
+    *ngIf="notFetched; else jsonEditor"
+  >
+    <div class="ui active inverted dimmer">
+      <div class="ui text loader">Loading...</div>
+    </div>
+    <p></p>
+  </div>
+</div>
+
+<ng-template #jsonEditor>
   <json-editor
     [options]="jsonEditorOptions"
-    [data]="data"
-    (change)="getData($event)"
-  ></json-editor>
-</div>
+    [(data)]="jsonData"
+    (change)="updateData($event)"
+  >
+  </json-editor>
+</ng-template>

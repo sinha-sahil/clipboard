@@ -1,34 +1,50 @@
 import { Component, ViewChild } from '@angular/core';
 import { JsonEditorComponent, JsonEditorOptions } from 'ang-jsoneditor';
 import { Clipboard } from '@angular/cdk/clipboard';
+import { AngularFireDatabase } from '@angular/fire/database';
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
 })
 export class AppComponent {
-  public jsonEditorOptions: JsonEditorOptions;
-
   @ViewChild(JsonEditorComponent, { static: false })
   jsonEditor: JsonEditorComponent = new JsonEditorComponent();
 
-  public data: any;
+  jsonEditorOptions: JsonEditorOptions;
+  jsonData: any;
+  currentValue: any;
+  notFetched: boolean;
 
-  constructor(private clipboard: Clipboard) {
+  constructor(
+    private clipboard: Clipboard,
+    private database: AngularFireDatabase
+  ) {
     this.jsonEditorOptions = new JsonEditorOptions();
-    this.jsonEditorOptions.modes = ['code', 'text', 'tree'];
-    this.data = {
-      keyOne: 'valueOne',
-      keyTwo: 'valueTwo',
-      keyThree: 'valueThree',
-    };
+    this.jsonEditorOptions.mode = 'code';
+    this.jsonData = {};
+    this.currentValue = this.jsonData;
+    this.notFetched = true;
+    let dataObserver = this.database.database.ref().child('common');
+    dataObserver.on('value', (data) => {
+      this.notFetched = false;
+      if (data.val()) {
+        this.jsonData = data.val();
+        this.currentValue = this.jsonData;
+      }
+    });
   }
 
-  public copy() {
-    this.clipboard.copy(JSON.stringify(this.data));
+  copy() {
+    this.clipboard.copy(JSON.stringify(this.jsonData));
   }
 
-  public getData(event: any) {
-    console.log(event);
+  update() {
+    this.database.database.ref().child('common').set(this.currentValue);
+  }
+  updateData(event: any) {
+    if (!event.isTrusted) {
+      this.currentValue = event;
+    }
   }
 }
